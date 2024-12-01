@@ -11,15 +11,24 @@ async function getCharacters(name, page = 1, options = {}) {
 
 function App() {
   const [value, setValue] = useState('');
+  const [debouncedValue, setDebouncedValue] = useState('');
   const [result, setResult] = useState([]);
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedValue(value);
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [value]);
+
+  useEffect(() => {
     const fetchData = async () => {
       setIsLoading(true);
       try {
-        const res = await getCharacters(value);
+        const res = await getCharacters(debouncedValue);
         if (res.error) {
           throw new Error(res.error);
         }
@@ -33,13 +42,13 @@ function App() {
       }
     };
 
-    if (value.trim().length > 0) {
+    if (debouncedValue.trim().length > 0) {
       fetchData();
     } else {
       setResult([]);
       setError(null);
     }
-  }, [value]);
+  }, [debouncedValue]);
 
   const searchNames = (e) => setValue(e.target.value);
   const names = result.map((person) => <li key={person.id}>{person.name}</li>);
